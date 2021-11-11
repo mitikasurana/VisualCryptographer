@@ -1,3 +1,6 @@
+from setup import install
+install()
+
 import os, re
 from tkinter import *
 import tkFileDialog, tkMessageBox
