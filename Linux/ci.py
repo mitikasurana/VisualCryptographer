@@ -1,20 +1,10 @@
-import sys
-import random
-import argparse
-import logging
+import os, re
 from tkinter import *
-import tkFileDialog
-from tkinter import filedialog
-from tkinter import messagebox
-import os
-import PIL
+import tkFileDialog, tkMessageBox
 from PIL import Image
-import math
 from Crypto.Cipher import AES
-import hashlib
-import binascii
+import hashlib, binascii
 import numpy as np
-
 
 global password 
 
@@ -60,7 +50,6 @@ def generate_ciphered_image(secret_image, prepared_image):
                 
     return ciphered_image
 
-
 def generate_image_back(secret_image, ciphered_image):
     width, height = secret_image.size
     new_image = Image.new(mode = "RGB", size = (int(width / 2), int(height / 2)))
@@ -87,8 +76,7 @@ def level_one_encrypt(Imagename):
 
     prepared_image = prepare_message_image(message_image, size)
     ciphered_image = generate_ciphered_image(secret_image, prepared_image)
-    ciphered_image.save("2-share_encrypt.jpeg")
-
+    ciphered_image.save("2-share_encrypted.jpeg")
 
 
 # -------------------- Construct Encrypted Image  ----------------#
@@ -103,7 +91,7 @@ def construct_enc_image(ciphertext,relength,width,height):
     reps = {'a':'1', 'b':'2', 'c':'3', 'd':'4', 'e':'5', 'f':'6', 'g':'7', 'h':'8', 'i':'9', 'j':'10', 'k':'11', 'l':'12', 'm':'13', 'n':'14', 'o':'15', 'p':'16', 'q':'17', 'r':'18', 's':'19', 't':'20', 'u':'21', 'v':'22', 'w':'23', 'x':'24', 'y':'25', 'z':'26'}
     asciiciphertxt = replace_all(asciicipher, reps)
 
-        # construct encrypted image
+    # construct encrypted image
     step = 3
     encimageone=[asciiciphertxt[i:i+step] for i in range(0, len(asciiciphertxt), step)]
        # if the last pixel RGB value is less than 3-digits, add a digit a 1
@@ -121,7 +109,7 @@ def construct_enc_image(ciphertext,relength,width,height):
 
     encim = Image.new("RGB", (int(width),int(height)))
     encim.putdata(encimagetwo)
-    encim.save("visual_encrypt.jpeg")
+    encim.save("visual_encrypted.jpeg")
 
 
 #------------------------- Visual-encryption -------------------------#
@@ -138,10 +126,10 @@ def encrypt(imagename,password):
     # break up the image into a list, each with pixel values and then append to a string
     for y in range(0,height):
         for x in range(0,width):
-            print (pix[x,y]) 
+            # print (pix[x,y]) 
             plaintext.append(pix[x,y])
-    print(width)
-    print(height)
+    print("Width :",width)
+    print("Height :",height)
 
     # add 100 to each tuple value to make sure each are 3 digits long.  
     for i in range(0,len(plaintext)):
@@ -170,19 +158,17 @@ def encrypt(imagename,password):
     g.write(ciphertext)
     construct_enc_image(ciphertext,relength,width,height)
     print("Visual Encryption done.......")
-    level_one_encrypt("visual_encrypt.jpeg")
+    level_one_encrypt("visual_encrypted.jpeg")
     print("2-Share Encryption done.......")
         
-
-
 
 # ---------------------- decryption ---------------------- #
 def decrypt(ciphername,password):
 
     secret_image = Image.open("secret.jpeg")
-    ima = Image.open("2-share_encrypt.jpeg")
+    ima = Image.open("2-share_encrypted.jpeg")
     new_image = generate_image_back(secret_image, ima)
-    new_image.save("2-share_decrypt.jpeg")
+    new_image.save("2-share_decrypted.jpeg")
     print("2-share Decryption done....")
     cipher = open(ciphername,'r')
     ciphertext = cipher.read()
@@ -212,29 +198,47 @@ def decrypt(ciphername,password):
     # reconstruct image from list of pixel RGB tuples
     newim = Image.new("RGB", (int(newwidth), int(newheight)))
     newim.putdata(finaltexttwo)
-    newim.save("visual_decrypt.jpeg")
+    newim.save("visual_decrypted.jpeg")
     print("Visual Decryption done......")
     
    
 
 # ---------------------
-# TKINTER GUI stuff starts here
+# TKINTER GUI
 # ---------------------
 
-def pass_alert():
-   tkMessageBox.showinfo("Password Alert","Please enter a password.")
+def pass_alert(title, message):
+   tkMessageBox.showinfo(title, message)
 
 def enc_success(imagename):
    tkMessageBox.showinfo("Success","Encrypted Image: " + imagename)
 
+def validate(password):
+    while True:
+        if len(password) < 8:
+            pass_alert("Invalid Key", "Make sure your password contains at least 8 characters.")
+            return False
+        elif re.search('[0-9]',password) is None:
+            pass_alert("Invalid Key", "Make sure your password contains atleast a digit.")
+            return False
+        elif re.search('[A-Z]',password) is None: 
+            pass_alert("Invalid Key", "Make sure your password contains an upper case character in it.")
+            return False
+        elif re.search('[!@#$%^&*]', password) is None:
+            pass_alert("Invalid Key", "Make sure your password contains atleast one of these special symbols - !, @, #, $, %, ^, &, *.")
+            return False
+        return True
+
 # image encrypt button event
 def image_open():
     global file_path_e
-
     enc_pass = passg.get()
+
     if enc_pass == "":
-        pass_alert()
-    else:
+        pass_alert("Key Missing","Please enter a Key.")
+    elif not validate(enc_pass):
+        return
+    else :
         password = hashlib.sha256(enc_pass).digest()
         filename = tkFileDialog.askopenfilename()
         file_path_e = os.path.dirname(filename)
@@ -246,7 +250,7 @@ def cipher_open():
 
     dec_pass = passg.get()
     if dec_pass == "":
-        pass_alert()
+        pass_alert("Key Missing","Please enter a key.")
     else:
         password = hashlib.sha256(b"tanay").digest()
         filename = tkFileDialog.askopenfilename()
@@ -257,13 +261,13 @@ class App:
   def __init__(self, master):
     global passg
     title = "Image Encryption"
-    author = "Made by Tanay Saraf"
+    author = "Made by Tanay Saraf, Mitika Surana"
     msgtitle = Message(master, text =title)
-    msgtitle.config(font=('helvetica', 17, 'bold'), width=200)
+    msgtitle.config(font=('helvetica', 18, 'bold'), width=400)
     msgauthor = Message(master, text=author)
-    msgauthor.config(font=('helvetica',10), width=200)
+    msgauthor.config(font=('helvetica',12), width=400)
 
-    canvas_width = 200
+    canvas_width = 300
     canvas_height = 50
     w = Canvas(master,
            width=canvas_width,
