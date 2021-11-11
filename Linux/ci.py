@@ -260,14 +260,14 @@ def cipher_open():
 class App:
   def __init__(self, master):
     global passg
-    title = "Image Encryption"
+    title = "VISUAL ENCRYPTION"
     author = "Made by Tanay Saraf, Mitika Surana"
     msgtitle = Message(master, text =title)
-    msgtitle.config(font=('helvetica', 18, 'bold'), width=400)
+    msgtitle.config(font=('calibri', 18, 'bold'), width=400)
     msgauthor = Message(master, text=author)
     msgauthor.config(font=('helvetica',12), width=400)
 
-    canvas_width = 300
+    canvas_width = 400
     canvas_height = 50
     w = Canvas(master,
            width=canvas_width,
@@ -276,18 +276,23 @@ class App:
     msgauthor.pack()
     w.pack()
 
-    passlabel = Label(master, text="Enter Encrypt/Decrypt Password:")
+    passlabel = Label(master, text="Enter your Encrypt/Decrypt Key:")
+    passlabel.config(font=('helvetica', 11))
     passlabel.pack()
-    passg = Entry(master, show="*", width=20)
+    passg = Entry(master, show="*", width=25)
+    passg.config(font=('helvetica', 11))
     passg.pack()
 
+    emptylabel = Label(master, height=3)
+    emptylabel.pack()
+    
     self.encrypt = Button(master,
                          text="Encrypt", fg="black",
-                         command=image_open, width=25,height=5)
+                         command=image_open, width=25,height=2)
     self.encrypt.pack(side=LEFT)
     self.decrypt = Button(master,
                          text="Decrypt", fg="black",
-                         command=cipher_open, width=25,height=5)
+                         command=cipher_open, width=25,height=2)
     self.decrypt.pack(side=RIGHT)
 
 
